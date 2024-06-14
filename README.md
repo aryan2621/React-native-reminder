@@ -4,6 +4,8 @@
 A mobile application to create Todo List with Image support.
 
 
+
+
 ## Tech Stack
 
 **Client:** React Native, Zustand, JWt Styled components, Firebase and NativeWinds.
@@ -27,11 +29,6 @@ To run this project, you will need to add the following environment variables to
 - Crud operation of Todos
 - Camera support with Todos
 - User Profile
-
-
-## Demo
-
-Insert gif or link to demo
 
 
 ## API Reference
@@ -58,6 +55,9 @@ Insert gif or link to demo
   POST /login
 ```
 
+
+
 ## Contributing
 
 Currently I am the sole author of this code, hence if anyone want to contribute contact me at risha2621@gmail.com
+
