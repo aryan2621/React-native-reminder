@@ -1,24 +1,28 @@
 import { initializeApp, getApp, getApps } from 'firebase/app';
+import firebase from 'firebase/app';
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import ky from 'ky';
 import Config from 'react-native-config';
 
-const firebaseConfig = {
-    apiKey: Config.API_KEY,
-    authDomain: Config.AUTH_DOMAIN,
-    projectId: Config.PROJECT_ID,
-    storageBucket: Config.STORAGE_BUCKET,
-    messagingSenderId: Config.MESSAGING_SENDER_ID,
-    appId: Config.APP_ID,
-};
+const getFirebaseApp = () => {
+    const firebaseConfig = {
+        apiKey: Config.EXPO_PUBLIC_API_KEY,
+        authDomain: Config.EXPO_PUBLIC_AUTH_DOMAIN,
+        projectId: Config.EXPO_PUBLIC_PROJECT_ID,
+        storageBucket: Config.EXPO_PUBLIC_STORAGE_BUCKET,
+        messagingSenderId: Config.EXPO_PUBLIC_MESSAGING_SENDER_ID,
+        appId: Config.EXPO_PUBLIC_APP_ID,
+    };
 
-let firebaseApp;
-if (getApps().length === 0) {
-    initializeApp(firebaseConfig);
-} else {
-    firebaseApp = getApp();
-}
-const fireStorage = getStorage(firebaseApp);
+    let firebaseApp;
+    if (getApps().length === 0) {
+        firebaseApp = initializeApp(firebaseConfig);
+    } else {
+        firebaseApp = getApp();
+    }
+    return firebaseApp;
+};
+const fireStorage = getStorage(getFirebaseApp(), 'gs://reminder-bcc9b.appspot.com');
 
 export const uploadImage = async (fileUri: string) => {
     try {

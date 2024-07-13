@@ -24,13 +24,16 @@
         }
       ],
       [
-        "expo-document-picker",
+        "expo-image-picker",
         {
-          "iCloudContainerEnvironment": "Production"
+          "photosPermission": "Allow Todo to access your photos",
+          "cameraPermission": "Allow Todo to access your camera"
         }
       ]
     ],
     "android": {
+      "package": "com.my-app",
+      "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"

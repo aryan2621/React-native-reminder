@@ -1,12 +1,14 @@
 import ky from 'ky';
 import { getAuth } from '../storage';
 import { URL } from '../store/auth';
+import { v4 as uuidv4 } from 'uuid';
 
 const CREATE_REQ = {
     INPUT: {
         NAME: 'name',
         EMAIL: 'email',
         PASSWORD: 'password',
+        USER_ID: 'user_id',
     },
 };
 
@@ -16,6 +18,7 @@ export const signUp = (data: any) => {
             name: data[CREATE_REQ.INPUT.NAME],
             email: data[CREATE_REQ.INPUT.EMAIL],
             password: data[CREATE_REQ.INPUT.PASSWORD],
+            user_id: uuidv4(),
         };
         return ky
             .post(`${URL}/register`, {
@@ -36,33 +39,6 @@ export const signIn = (data: any) => {
             json: input,
         })
         .json();
-};
-
-export const checkToken = (token: string) => {
-    try {
-        return ky
-            .post(`${URL}/check`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            })
-            .json();
-    } catch (error) {
-        console.log(`Failed to check token: ${error}`);
-    }
-};
-export const refreshToken = (token: string) => {
-    try {
-        return ky
-            .post(`${URL}/refresh`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            })
-            .json();
-    } catch (error) {
-        console.log(`Failed to refresh token: ${error}`);
-    }
 };
 
 export const getUser = async () => {

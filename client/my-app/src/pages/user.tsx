@@ -18,7 +18,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import { fetchImage, uploadProfile } from '../config/firebase';
 
 const User = () => {
-    const { logout } = useAuthStore();
+    const { logout, currentUser, removeCurrentUser, setCurrentUser } = useAuthStore();
 
     const [user, setUser] = useState<DBUser>(new DBUser({}));
     const [loading, setLoading] = useState(true);
@@ -32,10 +32,22 @@ const User = () => {
 
     const fetchUser = async () => {
         setLoading(true);
-        const response = await getUser();
-        const userData = new DBUser(response);
-        setUser(userData);
-        await fetchAndSetImage(userData.imageUrl);
+        let response: DBUser = currentUser;
+        if (!currentUser.email) {
+            response = await getUser() as DBUser;
+            setUser(new DBUser(response));
+            setCurrentUser(response);
+            if (response.imageUrl) {
+                await fetchAndSetImage(response.imageUrl);
+            }
+        } else {
+            const userData = currentUser;
+            setUser(userData);
+            if (userData.imageUrl) {
+                setImage(userData.imageUrl);
+            }
+
+        }
         setLoading(false);
     };
 
@@ -56,6 +68,7 @@ const User = () => {
 
     const handleLogout = async () => {
         await logout();
+        removeCurrentUser();
     };
 
     const handleUpload = async () => {
@@ -70,8 +83,10 @@ const User = () => {
             const uri = result.assets[0].uri;
             setImage(uri);
             const uploadResult = await uploadProfile(uri);
-            await updateUser(uploadResult);
-            await fetchAndSetImage(uploadResult);
+
+            await Promise.all([updateUser(uploadResult), fetchAndSetImage(uploadResult)]);
+
+            setCurrentUser({ ...user, imageUrl: uri });
             setUploading(false);
         }
     };
@@ -80,6 +95,7 @@ const User = () => {
         setUploading(true);
         await updateUser('');
         setImage('');
+        setCurrentUser({ ...user, imageUrl: '' });
         setUploading(false);
     };
 

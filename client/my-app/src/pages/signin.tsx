@@ -1,20 +1,18 @@
 import { View, Text, TextInput, useColorScheme, StyleSheet, Alert } from 'react-native';
 import React, { useState } from 'react';
-import { resetUser, User } from '../model';
+import { SignInUser } from '../model';
 import useAuthStore from '../store/auth';
 import { signIn } from '../service/user';
 import { setAuth } from '../storage';
 import { ImageBackground } from 'react-native';
-import image from '../../assets/download.jpeg';
 import Button from '../components/button';
-const bgColor = '#EDEADE';
 
 const emailRegex =
     /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|.(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
 
-const SignIn = ({ navigation }) => {
+const SignIn = ({ navigation }: any) => {
     const darkMode = useColorScheme() === 'dark';
-    const [user, setUser] = useState(new User({}));
+    const [user, setUser] = useState(new SignInUser({}));
     const [focusedInput, setFocusedInput] = useState<string | null>(null);
 
     const handleUserChange = (value: any, name: any) => {
@@ -43,15 +41,13 @@ const SignIn = ({ navigation }) => {
         }
 
         try {
-            const res = await signIn(user);
-            const token = res?.token;
-            await setAuth(token);
+            const res = await signIn(user) as any;
+            await setAuth(res.token);
             login();
-            resetUser(user);
+            setUser(new SignInUser({}));
             Alert.alert('Success', 'Signed in successfully', [{ text: 'OK' }]);
         } catch (error) {
             const err = JSON.parse(JSON.stringify(error));
-
             let errMsg = 'Error while sign in, please try again';
             if (err?.response?.status === 401) {
                 errMsg = 'Invalid credentials, please try again';
@@ -70,7 +66,7 @@ const SignIn = ({ navigation }) => {
             ]}
         >
             <View style={styles.imageContainer}>
-                <ImageBackground source={image} style={styles.image}></ImageBackground>
+                <ImageBackground source={require('../../assets/download.jpeg')} style={styles.image}></ImageBackground>
             </View>
             <View style={styles.row}>
                 <Text

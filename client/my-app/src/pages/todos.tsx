@@ -13,9 +13,10 @@ import {
 } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import { deleteTodoById, fetchTodos } from '../service/todo';
-import { DBTask, formatTime } from '../model';
+import { DBTask } from '../model';
 import UpdateTodo from './updateTodo';
 import Button from '../components/button';
+import { formatTime } from '../utils';
 
 const Todos = () => {
     const [todos, setTodos] = useState<DBTask[]>([]);
@@ -26,26 +27,25 @@ const Todos = () => {
     const [selectedTask, setSelectedTask] = useState<DBTask | null>(null);
     const [searchText, setSearchText] = useState('');
 
-    useEffect(() => {
-        const fetchTodosData = async () => {
-            const response = await fetchTodos();
-            const todosData = response?.todos;
-            const dbTodos: DBTask[] = todosData.map((todo: any) => new DBTask(todo));
-            setTodos(dbTodos);
-            setNTodos(dbTodos);
-            setLoading(false);
-        };
 
-        fetchTodosData();
-    }, []);
-
-    const onRefresh = async () => {
-        setRefreshing(true);
+    const getAllTodos = async () => {
         const response = await fetchTodos();
-        const todosData = response?.todos;
-        const dbTodos: DBTask[] = todosData.map((todo: any) => new DBTask(todo));
+        const todosData = response ?? [];
+        const dbTodos: DBTask[] = (todosData ?? []).map((todo: any) => new DBTask(todo));
         setTodos(dbTodos);
         setNTodos(dbTodos);
+    }
+
+    useEffect(() => {
+        const fetchTodosData = async () => {
+            await getAllTodos();
+            setLoading(false);
+        };
+        fetchTodosData();
+    }, []);
+    const onRefresh = async () => {
+        setRefreshing(true);
+        await getAllTodos();
         setRefreshing(false);
     };
 
@@ -73,11 +73,11 @@ const Todos = () => {
     };
 
     const handleDelete = async (todo: DBTask) => {
-        if (todo.id) {
+        if (todo.taskId) {
             try {
-                await deleteTodoById(todo.id);
-                setTodos(todos.filter((t) => t.id !== todo.id));
-                setNTodos(nTodos.filter((t) => t.id !== todo.id));
+                await deleteTodoById(todo.taskId);
+                setTodos(todos.filter((t) => t.taskId !== todo.taskId));
+                setNTodos(nTodos.filter((t) => t.taskId !== todo.taskId));
             } catch (error) {
                 const err = JSON.parse(JSON.stringify(error));
                 let errMsg = 'Error while deleting task, please try again';
@@ -128,7 +128,7 @@ const Todos = () => {
                     </View>
                     <FlashList
                         data={nTodos.length > 0 ? handleSearchText() : todos}
-                        keyExtractor={(item) => item.id?.toString() || Math.random().toString()}
+                        keyExtractor={(item) => item.taskId?.toString() || Math.random().toString()}
                         renderItem={({ item }) => (
                             <TouchableOpacity
                                 style={styles.taskContainer}

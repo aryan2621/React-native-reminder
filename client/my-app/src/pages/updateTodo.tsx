@@ -11,11 +11,12 @@ import {
     ActivityIndicator,
     Alert,
 } from 'react-native';
-import { resetTask, Task } from '../model';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { fetchImage, uploadImage } from '../config/firebase';
 import { updateTodoById } from '../service/todo';
 import Button from '../components/button';
+import * as DocumentPicker from 'expo-document-picker';
+
 
 enum Facing {
     Front = 'front',
@@ -26,10 +27,9 @@ enum Mode {
     Picture = 'picture',
 }
 
-const UpdateTodo = ({ task }) => {
+const UpdateTodo = ({ task }: any) => {
     const darkMode = useColorScheme() === 'dark';
-
-    const [todo, setTodo] = useState(new Task(task));
+    const [todo, setTodo] = useState(task);
     const [focusedInput, setFocusedInput] = useState<string | null>(null);
     const [cameraPermission, setCameraPermission] = useCameraPermissions();
     const [facing, setFacing] = useState(Facing.Back);
@@ -48,7 +48,6 @@ const UpdateTodo = ({ task }) => {
             setImage(image);
         };
         if (task) {
-            const todo = new Task(task);
             setTodo(todo);
             setIsUploadingImage(true);
             fetchAndSetImage(todo.imageUrl ?? '').then(() => {
@@ -102,7 +101,7 @@ const UpdateTodo = ({ task }) => {
                 setTodo({
                     ...todo,
                     imageUrl: url,
-                } as Task);
+                } as any);
                 Alert.alert('Success', 'Image captured successfully', [{ text: 'OK' }]);
             } else {
                 Alert.alert('Error', `Image is not present, please try again`, [{ text: 'OK' }]);
@@ -112,6 +111,34 @@ const UpdateTodo = ({ task }) => {
         }
         setIsUploadingImage(false);
     };
+
+    const handleUpload = async () => {
+        if (openCamera) {
+            toggleOpenCamera();
+        }
+        try {
+            const result = await DocumentPicker.getDocumentAsync({
+                type: 'image/*',
+                copyToCacheDirectory: true,
+            });
+            if (!result.canceled) {
+                const uri = result.assets[0].uri;
+                setImage(uri);
+                setIsUploadingImage(true);
+                const url = await uploadImage(uri);
+                setTodo({
+                    ...todo,
+                    imageUrl: url,
+                } as any);
+                Alert.alert('Success', 'Image uploaded successfully', [{ text: 'OK' }]);
+            } else {
+                Alert.alert('Error', `Failed to upload image, please try again`, [{ text: 'OK' }]);
+            }
+        } catch (error) {
+            Alert.alert('Error', `Failed to upload image, please try again`, [{ text: 'OK' }]);
+        }
+        setIsUploadingImage(false);
+    }
 
     const handleTaskChanges = (value: any, name: any) => {
         setTodo({
@@ -134,8 +161,8 @@ const UpdateTodo = ({ task }) => {
             return;
         }
         try {
-            if (todo.id) {
-                await updateTodoById(todo.id, todo);
+            if (todo.taskId) {
+                await updateTodoById(todo.taskId, todo);
             } else {
                 throw new Error('Task id is missing');
             }
@@ -281,11 +308,18 @@ const UpdateTodo = ({ task }) => {
                         </View>
                     </CameraView>
                 )}
-                <Button
-                    bgColor={'#007BFF'}
-                    btnFunction={toggleOpenCamera}
-                    text={openCamera ? 'Close' : 'Open Camera'}
-                />
+                <View style={styles.btnContainer}>
+                    <Button
+                        bgColor={'#007BFF'}
+                        btnFunction={toggleOpenCamera}
+                        text={openCamera ? 'Close' : 'Open Camera'}
+                    />
+                    <Button
+                        bgColor={'#007BFF'}
+                        btnFunction={handleUpload}
+                        text={'Upload Image'}
+                    />
+                </View>
                 <Button bgColor={'#007BFF'} btnFunction={handleUpdate} text={'Update'} />
             </>
         </View>
@@ -293,6 +327,11 @@ const UpdateTodo = ({ task }) => {
 };
 
 const styles = StyleSheet.create({
+    btnContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginVertical: 10,
+    },
     container: {
         flex: 1,
         backgroundColor: '#EDEADE',

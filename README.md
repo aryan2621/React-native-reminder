@@ -10,7 +10,7 @@ A mobile application to create Todo List with Image support.
 
 ## Tech Stack
 
-**Client:** React Native, Zustand, JWt Styled components, Firebase and NativeWinds.
+**Client:** React Native, Zustand, JWt Styled components, Firebase.
 
 **Server:** Flask, Sql Alchemy and Mysql.
 

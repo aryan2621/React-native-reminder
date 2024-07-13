@@ -11,11 +11,12 @@ import {
     ActivityIndicator,
     Alert,
 } from 'react-native';
-import { resetTask, Task } from '../model';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { uploadImage } from '../config/firebase';
 import { createTodo } from '../service/todo';
 import Button from '../components/button';
+import { DBTask } from '../model';
+import * as DocumentPicker from 'expo-document-picker';
 
 enum Facing {
     Front = 'front',
@@ -26,10 +27,10 @@ enum Mode {
     Picture = 'picture',
 }
 
-const AddTodo = ({ navigation }) => {
+const AddTodo = ({ navigation }: any) => {
     const darkMode = useColorScheme() === 'dark';
 
-    const [todo, setTodo] = useState(new Task({}));
+    const [todo, setTodo] = useState(new DBTask({}));
     const [focusedInput, setFocusedInput] = useState<string | null>(null);
     const [cameraPermission, setCameraPermission] = useCameraPermissions();
     const [facing, setFacing] = useState(Facing.Back);
@@ -85,7 +86,7 @@ const AddTodo = ({ navigation }) => {
                 setTodo({
                     ...todo,
                     imageUrl: url,
-                } as Task);
+                } as any);
                 Alert.alert('Success', 'Image captured successfully', [{ text: 'OK' }]);
             } else {
                 Alert.alert('Error', `Image is not present, please try again`, [{ text: 'OK' }]);
@@ -117,7 +118,7 @@ const AddTodo = ({ navigation }) => {
         todo.imageUrl = todo.imageUrl ?? '';
         try {
             await createTodo(todo);
-            resetTask(todo);
+            setTodo(new DBTask({}));
             setImage('');
             Alert.alert('Success', 'Task created successfully', [{ text: 'OK' }]);
             navigation.navigate('Todos');
@@ -125,6 +126,33 @@ const AddTodo = ({ navigation }) => {
             Alert.alert('Error', 'Failed to create task, please try again', [{ text: 'OK' }]);
         }
     };
+    const handleUpload = async () => {
+        if (openCamera) {
+            toggleOpenCamera();
+        }
+        try {
+            const result = await DocumentPicker.getDocumentAsync({
+                type: 'image/*',
+                copyToCacheDirectory: true,
+            });
+            if (!result.canceled) {
+                const uri = result.assets[0].uri;
+                setImage(uri);
+                setIsUploadingImage(true);
+                const url = await uploadImage(uri);
+                setTodo({
+                    ...todo,
+                    imageUrl: url,
+                } as any);
+                Alert.alert('Success', 'Image uploaded successfully', [{ text: 'OK' }]);
+            } else {
+                Alert.alert('Error', `Failed to upload image, please try again`, [{ text: 'OK' }]);
+            }
+        } catch (error) {
+            Alert.alert('Error', `Failed to upload image,please try again`, [{ text: 'OK' }]);
+        }
+        setIsUploadingImage(false);
+    }
 
     return (
         <View
@@ -255,11 +283,18 @@ const AddTodo = ({ navigation }) => {
                         </View>
                     </CameraView>
                 )}
-                <Button
-                    bgColor="#007BFF"
-                    text={openCamera ? 'Close Camera' : 'Open Camera'}
-                    btnFunction={toggleOpenCamera}
-                />
+                <View style={styles.btnContainer}>
+                    <Button
+                        bgColor="#007BFF"
+                        text={openCamera ? 'Close Camera' : 'Open Camera'}
+                        btnFunction={toggleOpenCamera}
+                    />
+                    <Button
+                        bgColor={'#007BFF'}
+                        btnFunction={handleUpload}
+                        text={'Upload Image'}
+                    />
+                </View>
                 <Button bgColor="#007BFF" text="Save" btnFunction={handleSave} />
             </>
         </View>
@@ -267,6 +302,11 @@ const AddTodo = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
+    btnContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginVertical: 10,
+    },
     container: {
         flex: 1,
         backgroundColor: '#EDEADE',

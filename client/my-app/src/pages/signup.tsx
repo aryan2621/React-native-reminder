@@ -1,18 +1,16 @@
 import { View, Text, TextInput, useColorScheme, StyleSheet, Alert } from 'react-native';
 import React, { useState } from 'react';
-import { resetUser, User } from '../model';
+import { SignUpUser } from '../model';
 import { signUp } from '../service/user';
 import { ImageBackground } from 'react-native';
-import image from '../../assets/download.jpeg';
 import Button from '../components/button';
-const bgColor = '#EDEADE';
 
 const emailRegex =
     /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|.(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
 
-const SignUp = ({ navigation }) => {
+const SignUp = ({ navigation }: any) => {
     const darkMode = useColorScheme() === 'dark';
-    const [user, setUser] = useState(new User({}));
+    const [user, setUser] = useState(new SignUpUser({}));
     const [focusedInput, setFocusedInput] = useState<string | null>(null);
 
     const handleUserChange = (value: any, name: any) => {
@@ -45,8 +43,8 @@ const SignUp = ({ navigation }) => {
             return;
         }
         try {
-            const res = await signUp(user);
-            resetUser(user);
+            await signUp(user);
+            setUser(new SignUpUser({}));
             Alert.alert('Success', 'Signed Up successfully', [{ text: 'OK' }]);
             navigation.navigate('SignIn');
         } catch (error) {
@@ -69,7 +67,7 @@ const SignUp = ({ navigation }) => {
             ]}
         >
             <View style={styles.imageContainer}>
-                <ImageBackground source={image} style={styles.image}></ImageBackground>
+                <ImageBackground source={require('../../assets/download.jpeg')} style={styles.image}></ImageBackground>
             </View>
             <View style={styles.row}>
                 <Text
